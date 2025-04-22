@@ -1,12 +1,17 @@
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
+#include <FastLED.h>
 
 // Replace with your network credentials
 const char *ssid = "Vale";
 const char *password = "13061993";
 
 const int ESP_BUILTIN_LED = 2;
+#define NUM_LEDS 10
+#define DATA_PIN D2
+
+CRGB leds[NUM_LEDS];
 
 void setup()
 {
@@ -50,6 +55,8 @@ void setup()
   Serial.println(WiFi.localIP());
 
   pinMode(ESP_BUILTIN_LED, OUTPUT);
+
+  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
 }
 
 void loop()
@@ -60,7 +67,13 @@ void loop()
   }
 
   digitalWrite(ESP_BUILTIN_LED, LOW);
-  delay(200);
+  leds[0] = CRGB::Red;
+  FastLED.show();
+  delay(500);
+
+  // Now turn the LED off, then pause
+  leds[0] = CRGB::Black;
   digitalWrite(ESP_BUILTIN_LED, HIGH);
-  delay(200);
+  FastLED.show();
+  delay(500);
 }
