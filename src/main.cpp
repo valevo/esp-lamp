@@ -13,7 +13,10 @@ const char *password = "13061993";
 const int ESP_BUILTIN_LED = 2;
 #define NUM_LEDS 144
 #define DATA_PIN 5 // this is D5 (on the board/diagram)
-#define BRIGHTNESS 20
+#define BRIGHTNESS 120
+
+int brightness = BRIGHTNESS;
+int direction = -1;
 
 CRGB leds[NUM_LEDS];
 
@@ -76,41 +79,21 @@ void loop()
     ArduinoOTA.handle();
   }
 
-  // for (int i = 0; i < NUM_LEDS; i++)
-  // {
-  //   // digitalWrite(ESP_BUILTIN_LED, LOW);
-  //   leds[i] = CRGB::Green;
-  //   // delay(500);
-  // }
-  // FastLED.show();
-  // delay(2000);
+  try
+  {
 
-  // for (int i = 0; i < NUM_LEDS; i++)
-  // {
-  //   // Now turn the LED off, then pause
-  //   // digitalWrite(ESP_BUILTIN_LED, HIGH);
-  //   leds[i] = CRGB::Red;
-  //   // delay(500);
-  // }
-  // FastLED.show();
-  // delay(2000);
+    Fire2012(); // run simulation frame
 
-  Fire2012(); // run simulation frame
+    FastLED.show(); // display this frame
+    FastLED.delay(1000 / 20);
 
-  FastLED.show(); // display this frame
-  FastLED.delay(1000 / 30);
-
-  // CRGB colors[] = {CRGB::Blue, CRGB::Green, CRGB::Red, CRGB::Yellow, CRGB::Orange, CRGB::White, CRGB::Black};
-
-  // for (int i = 0; i < sizeof(colors) / sizeof(colors[i]); i++)
-  // {
-  //   for (int j = 0; j < NUM_LEDS; j++)
-  //   {
-  //     leds[j] = colors[i];
-  //   }
-  //   FastLED.show(); // display this frame
-  //   FastLED.delay(1000);
-  // }
+    // if (brightness == 0 || brightness >= 160) { direction = direction*-1;}
+    // brightness = brightness + direction;
+    // FastLED.setBrightness(brightness);
+  }
+  catch ()
+  {
+  }
 }
 
 // Fire2012 by Mark Kriegsman, July 2012
@@ -173,7 +156,7 @@ void Fire2012()
   {
     int y = random8(7);
     heat[y] = qadd8(heat[y], random8(160, 255));
-    heat[y] = std::min((uint8_t)200, std::max((uint8_t)180, heat[y]));
+    heat[y] = std::min((uint8_t)180, std::max((uint8_t)200, heat[y]));
   }
 
   // Step 4.  Map from heat cells to LED colors
