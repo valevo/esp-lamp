@@ -23,12 +23,44 @@ CRGB leds[NUM_LEDS];
 bool gReverseDirection = false;
 void Fire2012();
 
+// TODO
+// ------
+// setup:
+//  - won't run until WiFi connected -> try a few times, then continue with the loop -> use lamp to indicate
+//  -
+//  -
+// loop:
+//  - fire more orange -> make fire for larger section, cut out middle part and show
+//  - modulate brightness -> random up-and-down motion
+// -- reverse direction?
+
 void setup()
 {
-  Serial.begin(115200);
-  Serial.println("Booting");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  // Serial.begin(115200);
+  // Serial.println("Booting");
+  // WiFi.mode(WIFI_STA);
+  // WiFi.begin(ssid, password);
+
+  // digitalWrite(ESP_BUILTIN_LED, HIGH);
+  // for (int i = 0; i < 10; i++) {
+  //   WiFi.waitForConnectResult();
+  //   Serial.println("Connection Failed! Rebooting...");
+  //   digitalWrite(ESP_BUILTIN_LED, LOW);
+  //   delay(5000);
+  //   digitalWrite(ESP_BUILTIN_LED, HIGH);
+  //   ESP.restart();
+  // }
+
+  // digitalWrite(ESP_BUILTIN_LED, LOW);
+  // delay(1000);
+  // digitalWrite(ESP_BUILTIN_LED, HIGH);
+  // digitalWrite(ESP_BUILTIN_LED, LOW);
+  // delay(500);
+  // digitalWrite(ESP_BUILTIN_LED, HIGH);
+  // digitalWrite(ESP_BUILTIN_LED, LOW);
+  // delay(250);
+  // digitalWrite(ESP_BUILTIN_LED, HIGH);
+
   while (WiFi.waitForConnectResult() != WL_CONNECTED)
   {
     Serial.println("Connection Failed! Rebooting...");
@@ -72,6 +104,7 @@ void setup()
 
 void loop()
 {
+  // HIGH means OFF
   digitalWrite(ESP_BUILTIN_LED, HIGH);
 
   if (WiFi.isConnected())
@@ -91,11 +124,18 @@ void loop()
     // brightness = brightness + direction;
     // FastLED.setBrightness(brightness);
   }
-  catch ()
+  catch (...)
   {
+    FastLED.setBrightness(50);
+    for (int j = 0; j < NUM_LEDS; j++)
+    {
+      leds[j] = CRGB::Red;
+    }
+    FastLED.show();
   }
 }
 
+// --------------------------------- ORIGINAL FIRE ----------------------------------------------
 // Fire2012 by Mark Kriegsman, July 2012
 // as part of "Five Elements" shown here: http://youtu.be/knWiGsmgycY
 ////
@@ -127,6 +167,60 @@ void loop()
 // COOLING: How much does the air cool as it rises?
 // Less cooling = taller flames.  More cooling = shorter flames.
 // Default 50, suggested range 20-100
+// #define COOLING 35
+
+// // SPARKING: What chance (out of 255) is there that a new spark will be lit?
+// // Higher chance = more roaring fire.  Lower chance = more flickery fire.
+// // Default 120, suggested range 50-200.
+// #define SPARKING 180
+
+// void Fire2012()
+// {
+//   // Array of temperature readings at each simulation cell
+//   static uint8_t heat[NUM_LEDS];
+
+//   // Step 1.  Cool down every cell a little
+//   for (int i = 0; i < NUM_LEDS; i++)
+//   {
+//     heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
+//   }
+
+//   // Step 2.  Heat from each cell drifts 'up' and diffuses a little
+//   for (int k = NUM_LEDS - 1; k >= 2; k--)
+//   {
+//     heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
+//   }
+
+//   // Step 3.  Randomly ignite new 'sparks' of heat near the bottom
+//   if (random8() < SPARKING)
+//   {
+//     int y = random8(7);
+//     heat[y] = qadd8(heat[y], random8(160, 255));
+//     heat[y] = std::min((uint8_t)180, std::max((uint8_t)200, heat[y]));
+//   }
+
+//   // Step 4.  Map from heat cells to LED colors
+//   for (int j = 0; j < NUM_LEDS; j++)
+//   {
+//     CRGB color = HeatColor(heat[j]);
+//     int pixelnumber;
+//     if (gReverseDirection)
+//     {
+//       pixelnumber = (NUM_LEDS - 1) - j;
+//     }
+//     else
+//     {
+//       pixelnumber = j;
+//     }
+//     leds[pixelnumber] = color;
+//   }
+// }
+
+// --------------------------------- ORIGINAL FIRE ----------------------------------------------
+
+
+
+
 #define COOLING 35
 
 // SPARKING: What chance (out of 255) is there that a new spark will be lit?
@@ -137,16 +231,17 @@ void loop()
 void Fire2012()
 {
   // Array of temperature readings at each simulation cell
-  static uint8_t heat[NUM_LEDS];
+  int N = NUM_LEDS * 3;
+  int8_t heat[N];
 
   // Step 1.  Cool down every cell a little
-  for (int i = 0; i < NUM_LEDS; i++)
+  for (int i = 0; i < N; i++)
   {
     heat[i] = qsub8(heat[i], random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
   }
 
   // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-  for (int k = NUM_LEDS - 1; k >= 2; k--)
+  for (int k = N - 1; k >= 2; k--)
   {
     heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
   }
@@ -156,17 +251,18 @@ void Fire2012()
   {
     int y = random8(7);
     heat[y] = qadd8(heat[y], random8(160, 255));
-    heat[y] = std::min((uint8_t)180, std::max((uint8_t)200, heat[y]));
   }
 
   // Step 4.  Map from heat cells to LED colors
-  for (int j = 0; j < NUM_LEDS; j++)
+  for (int j = NUM_LEDS; j < NUM_LEDS * 2; j++)
   {
+    // heat[j] = std::min((uint8_t)180, std::max((uint8_t)200, heat[j]));
+
     CRGB color = HeatColor(heat[j]);
     int pixelnumber;
     if (gReverseDirection)
     {
-      pixelnumber = (NUM_LEDS - 1) - j;
+      pixelnumber = (NUM_LEDS * 2 - 1) - j;
     }
     else
     {
